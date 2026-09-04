@@ -1,0 +1,72 @@
+#include <WiFi.h>
+
+const char* ssid = "YOUR_2_4_GHZ_SSID";
+const char* password = "YOUR_PASSWORD";
+
+void onWiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  switch (event) {
+    case ARDUINO_EVENT_WIFI_STA_START:
+      Serial.println("Event: STA started");
+      break;
+
+    case ARDUINO_EVENT_WIFI_STA_CONNECTED:
+      Serial.println("Event: Associated with AP");
+      break;
+
+    case ARDUINO_EVENT_WIFI_STA_GOT_IP:
+      Serial.print("Event: Got IP: ");
+      Serial.println(WiFi.localIP());
+      break;
+
+    case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
+      Serial.printf(
+        "Event: Disconnected, reason=%d\n",
+        info.wifi_sta_disconnected.reason
+      );
+      break;
+
+    default:
+      break;
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(1500);
+
+  Serial.printf(
+    "ESP32 Arduino core: %d.%d.%d\n",
+    ESP_ARDUINO_VERSION_MAJOR,
+    ESP_ARDUINO_VERSION_MINOR,
+    ESP_ARDUINO_VERSION_PATCH
+  );
+
+  WiFi.onEvent(onWiFiEvent);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true);
+  delay(1000);
+
+  WiFi.setSleep(false);
+
+  Serial.printf("Connecting to: %s\n", ssid);
+  WiFi.begin(ssid, password);
+
+  wl_status_t result = WiFi.waitForConnectResult(20000);
+
+  Serial.printf("Connection result: %d\n", result);
+  Serial.printf("Final status: %d\n", WiFi.status());
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("CONNECTED");
+    Serial.print("IP: ");
+    Serial.println(WiFi.localIP());
+    Serial.print("RSSI: ");
+    Serial.println(WiFi.RSSI());
+  } else {
+    Serial.println("FAILED TO CONNECT");
+  }
+}
+
+void loop() {
+}
