@@ -46,8 +46,8 @@ String WebApp::statusJson() const {
   String json = "{\"firmwareVersion\":\"";
   json += AppConfig::FIRMWARE_VERSION;
   json += "\"";
-  json += ",\"buildDate\":\" + AppConfig::BUILD_DATE + "\"";
-  json += ",\"buildTime\":\" + AppConfig::BUILD_TIME + "\"";
+  json += ",\"buildDate\":\"" + AppConfig::BUILD_DATE + "\"";
+  json += ",\"buildTime\":\"" + AppConfig::BUILD_TIME + "\"";
   json += ",\"speed\":" + String(motor_.speed());
   json += ",\"pwmDuty\":" + String(motor_.duty());
   json += ",\"mode\":\"" + jsonEscape(network_.modeName()) + "\"";
