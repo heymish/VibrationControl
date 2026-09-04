@@ -1,0 +1,40 @@
+#include <WiFi.h>
+#include "esp_wifi.h"
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  WiFi.mode(WIFI_OFF);
+  delay(500);
+
+  WiFi.mode(WIFI_AP);
+  delay(500);
+
+  // Maximum normal Wi-Fi transmit power: 20 dBm.
+  esp_wifi_set_max_tx_power(80);
+
+  bool ok = WiFi.softAP(
+    "C3-RADIO-TEST",
+    nullptr,
+    6,
+    false,
+    4
+  );
+
+  int8_t txPower = 0;
+  esp_wifi_get_max_tx_power(&txPower);
+
+  Serial.printf("AP=%s\n", ok ? "OK" : "FAIL");
+  Serial.printf("Mode=%d\n", WiFi.getMode());
+  Serial.printf("SSID=%s\n", WiFi.softAPSSID().c_str());
+  Serial.printf("Hidden=0\n");
+  Serial.printf("Channel=%d\n", WiFi.channel());
+  Serial.printf("IP=%s\n", WiFi.softAPIP().toString().c_str());
+  Serial.printf("MAC=%s\n", WiFi.softAPmacAddress().c_str());
+  Serial.printf("TX power setting=%d quarter-dBm\n", txPower);
+}
+
+void loop() {
+  delay(1000);
+}
