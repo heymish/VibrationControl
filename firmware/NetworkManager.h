@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 
-class NetworkManager {
+class MotorNetworkManager {
 public:
   void begin();
   void loop();
