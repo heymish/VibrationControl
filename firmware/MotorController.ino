@@ -22,7 +22,9 @@ void setup() {
 }
 
 void loop() {
+  motor.update();
   webApp.loop();
   network.loop();
+
   delay(2);
 }
