@@ -1,10 +1,10 @@
 #include "AppConfig.h"
 #include "MotorControl.h"
-#include "NetworkManager.h"
+#include "MotorNetworkManager.h"
 #include "WebApp.h"
 
 MotorControl motor;
-NetworkManager network;
+MotorNetworkManager network;
 WebApp webApp(motor, network);
 
 void setup() {
