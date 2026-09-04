@@ -12,6 +12,8 @@ void setup() {
   delay(500);
 
   Serial.println();
+  Serial.printf("ESP32-C3 Montor Controller v%s strarting\n",AppConfig::FIRMWARE_VERSION);
+  Serial.println();
   Serial.println("ESP32-C3 motor controller starting");
 
   motor.begin();       // Always starts at 0%.
