@@ -3,7 +3,7 @@
 #include "WebPages.h"
 #include <WiFi.h>
 
-WebApp::WebApp(MotorControl& motor, NetworkManager& network)
+WebApp::WebApp(MotorControl& motor, MotorNetworkManager& network)
   : motor_(motor), network_(network) {}
 
 String WebApp::htmlEscape(const String& input) {
