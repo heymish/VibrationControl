@@ -6,7 +6,7 @@
 
 class WebApp {
 public:
-  WebApp(MotorControl& motor, NetworkManager& network);
+  WebApp(MotorControl& motor, MotorNetworkManager& network);
   void begin();
   void loop();
 
