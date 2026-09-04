@@ -31,7 +31,7 @@ void MotorNetworkManager::eraseCredentials() {
   preferences_.end();
 }
 
-void MotoretworkManager::startMDNS() {
+void MotorNetworkManager::startMDNS() {
   if (mdnsActive_ || WiFi.status() != WL_CONNECTED) return;
 
   if (MDNS.begin(AppConfig::MDNS_HOSTNAME)) {
