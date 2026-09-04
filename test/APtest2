@@ -1,0 +1,28 @@
+#include <WiFi.h>
+#include "esp_wifi.h"
+
+void setup() {
+  Serial.begin(115200);
+
+  WiFi.mode(WIFI_AP);
+
+  bool ok = WiFi.softAP(
+      "TEST-ESP32",
+      "password123",
+      1,
+      false
+  );
+
+  Serial.printf("AP=%s\n", ok ? "OK" : "FAIL");
+  Serial.printf("Channel=%d\n", WiFi.channel());
+  Serial.printf("IP=%s\n", WiFi.softAPIP().toString().c_str());
+
+  wifi_mode_t mode;
+  esp_wifi_get_mode(&mode);
+  Serial.printf("Mode=%d\n", mode);
+
+  Serial.printf("SSID=%s\n", WiFi.softAPSSID().c_str());
+  Serial.printf("MAC=%s\n", WiFi.softAPmacAddress().c_str());
+}
+
+void loop() {}
