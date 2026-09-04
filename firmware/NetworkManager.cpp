@@ -3,21 +3,21 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
-String NetworkManager::savedSSID() {
+String MotorNetworkManager::savedSSID() {
   preferences_.begin("wifi", true);
   String value = preferences_.getString("ssid", "");
   preferences_.end();
   return value;
 }
 
-String NetworkManager::savedPassword() {
+String MotorNetworkManager::savedPassword() {
   preferences_.begin("wifi", true);
   String value = preferences_.getString("password", "");
   preferences_.end();
   return value;
 }
 
-void NetworkManager::saveCredentials(const String& ssidValue,
+void MotorNetworkManager::saveCredentials(const String& ssidValue,
                                      const String& password) {
   preferences_.begin("wifi", false);
   preferences_.putString("ssid", ssidValue);
@@ -25,13 +25,13 @@ void NetworkManager::saveCredentials(const String& ssidValue,
   preferences_.end();
 }
 
-void NetworkManager::eraseCredentials() {
+void MotorNetworkManager::eraseCredentials() {
   preferences_.begin("wifi", false);
   preferences_.clear();
   preferences_.end();
 }
 
-void NetworkManager::startMDNS() {
+void MotoretworkManager::startMDNS() {
   if (mdnsActive_ || WiFi.status() != WL_CONNECTED) return;
 
   if (MDNS.begin(AppConfig::MDNS_HOSTNAME)) {
@@ -41,7 +41,7 @@ void NetworkManager::startMDNS() {
   }
 }
 
-bool NetworkManager::connectSaved() {
+bool MotorNetworkManager::connectSaved() {
   const String name = savedSSID();
   const String password = savedPassword();
 
@@ -78,7 +78,7 @@ bool NetworkManager::connectSaved() {
   return true;
 }
 
-void NetworkManager::startAccessPoint() {
+void MotorNetworkManager::startAccessPoint() {
   WiFi.mode(WIFI_AP_STA); // Keep STA enabled so the setup page can scan.
 
   if (!WiFi.softAP(AppConfig::AP_SSID, AppConfig::AP_PASSWORD)) {
@@ -92,11 +92,11 @@ void NetworkManager::startAccessPoint() {
   Serial.println(WiFi.softAPIP());
 }
 
-void NetworkManager::begin() {
+void MotorNetworkManager::begin() {
   if (!connectSaved()) startAccessPoint();
 }
 
-void NetworkManager::loop() {
+void MotorNetworkManager::loop() {
   if (apActive_) return;
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -120,33 +120,33 @@ void NetworkManager::loop() {
   WiFi.begin(name.c_str(), savedPassword().c_str());
 }
 
-String NetworkManager::modeName() const {
+String MotorNetworkManager::modeName() const {
   if (apActive_ && WiFi.status() == WL_CONNECTED) return "access-point-and-station";
   if (apActive_) return "access-point";
   if (WiFi.status() == WL_CONNECTED) return "station";
   return "disconnected";
 }
 
-String NetworkManager::ipAddress() const {
+String MotorNetworkManager::ipAddress() const {
   if (apActive_) return WiFi.softAPIP().toString();
   if (WiFi.status() == WL_CONNECTED) return WiFi.localIP().toString();
   return "0.0.0.0";
 }
 
-String NetworkManager::ssid() const {
+String MotorNetworkManager::ssid() const {
   if (WiFi.status() == WL_CONNECTED) return WiFi.SSID();
   if (apActive_) return AppConfig::AP_SSID;
   return "";
 }
 
-int32_t NetworkManager::rssi() const {
+int32_t MotorNetworkManager::rssi() const {
   return WiFi.RSSI();
 }
 
-bool NetworkManager::hasRssi() const {
+bool MotorNetworkManager::hasRssi() const {
   return WiFi.status() == WL_CONNECTED;
 }
 
-bool NetworkManager::accessPointActive() const {
+bool MotorNetworkManager::accessPointActive() const {
   return apActive_;
 }
