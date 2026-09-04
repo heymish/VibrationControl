@@ -22,4 +22,8 @@ namespace AppConfig {
   constexpr uint32_t WIFI_CONNECT_TIMEOUT_MS = 15000;
   constexpr uint32_t WIFI_RECONNECT_INTERVAL_MS = 30000;
   constexpr uint32_t SPEED_UPDATE_DELAY_MS = 120;
+
+  constexpr char FIRMWARE_VERSION[] = "0.0.1";
+  constexpr char BUILD_DATE[] = __DATE__;
+  constexpr char BUILD_TIME[] = __TIME__;
 }
