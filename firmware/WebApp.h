@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <WebServer.h>
 #include "MotorControl.h"
-#include "NetworkManager.h"
+#include "MotorNetworkManager.h"
 
 class WebApp {
 public:
@@ -13,7 +13,7 @@ public:
 private:
   WebServer server_{80};
   MotorControl& motor_;
-  NetworkManager& network_;
+  MotorNetworkManager& network_;
 
   static String htmlEscape(const String& input);
   static String jsonEscape(const String& input);
