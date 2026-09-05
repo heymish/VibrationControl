@@ -1,0 +1,123 @@
+#include <Arduino.h>
+#include <math.h>
+
+// ---------------- User settings ----------------
+
+constexpr uint8_t MOTOR_PWM_PIN = 1;
+
+// PWM carrier settings
+constexpr uint32_t PWM_FREQUENCY_HZ = 20000;
+constexpr uint8_t PWM_RESOLUTION_BITS = 10;
+
+// Set the average motor speed here:
+float motorSpeedPercent = 60.0f;
+
+// FFT marker settings
+float markerFrequencyHz = 90.0f;
+
+// Duty-cycle modulation depth in percentage points.
+// At speed=60 and depth=3, duty varies from 57% to 63%.
+float markerDepthPercent = 3.0f;
+
+// How frequently the sine modulation is updated.
+// This should be much higher than markerFrequencyHz.
+constexpr uint32_t MODULATION_UPDATE_RATE_HZ = 2000;
+
+// Set false to run the motor without the marker.
+bool markerEnabled = true;
+
+// ------------------------------------------------
+
+constexpr uint32_t PWM_MAX =
+    (1UL << PWM_RESOLUTION_BITS) - 1UL;
+
+constexpr uint32_t UPDATE_INTERVAL_US =
+    1000000UL / MODULATION_UPDATE_RATE_HZ;
+
+uint32_t previousUpdateUs = 0;
+float markerPhase = 0.0f;
+
+void writeMotorDuty(float dutyPercent)
+{
+    dutyPercent = constrain(dutyPercent, 0.0f, 100.0f);
+
+    uint32_t pwmValue =
+        lroundf((dutyPercent / 100.0f) * PWM_MAX);
+
+    ledcWrite(MOTOR_PWM_PIN, pwmValue);
+}
+
+void setMotorSpeed(float speedPercent)
+{
+    motorSpeedPercent = constrain(speedPercent, 0.0f, 100.0f);
+}
+
+void setMarker(float frequencyHz, float depthPercent)
+{
+    markerFrequencyHz = frequencyHz;
+    markerDepthPercent = fabsf(depthPercent);
+}
+
+void setup()
+{
+    Serial.begin(115200);
+
+    // Arduino-ESP32 3.x API:
+    // ledcAttach(pin, frequency, resolution)
+    bool attached = ledcAttach(
+        MOTOR_PWM_PIN,
+        PWM_FREQUENCY_HZ,
+        PWM_RESOLUTION_BITS
+    );
+
+    if (!attached) {
+        Serial.println("Failed to configure PWM output.");
+        while (true) {
+            delay(1000);
+        }
+    }
+
+    // Start stopped briefly.
+    writeMotorDuty(0.0f);
+    delay(1000);
+
+    // Set desired operating condition.
+    setMotorSpeed(60.0f);
+    setMarker(90.0f, 3.0f);
+
+    previousUpdateUs = micros();
+
+    Serial.println("Motor PWM started.");
+}
+
+void loop()
+{
+    uint32_t nowUs = micros();
+
+    if ((uint32_t)(nowUs - previousUpdateUs) >= UPDATE_INTERVAL_US) {
+        previousUpdateUs += UPDATE_INTERVAL_US;
+
+        float commandedDuty = motorSpeedPercent;
+
+        if (markerEnabled &&
+            markerFrequencyHz > 0.0f &&
+            markerDepthPercent > 0.0f) {
+
+            float marker =
+                markerDepthPercent * sinf(markerPhase);
+
+            commandedDuty += marker;
+
+            markerPhase +=
+                2.0f * PI *
+                markerFrequencyHz /
+                MODULATION_UPDATE_RATE_HZ;
+
+            if (markerPhase >= 2.0f * PI) {
+                markerPhase -= 2.0f * PI;
+            }
+        }
+
+        writeMotorDuty(commandedDuty);
+    }
+}
