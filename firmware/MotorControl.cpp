@@ -2,14 +2,9 @@
 #include "AppConfig.h"
 
 void MotorControl::begin() {
-  pwmAttached_ = ledcAttach(
-    AppConfig::MOTOR_PWM_PIN,
-    AppConfig::PWM_FREQUENCY_HZ,
-    AppConfig::PWM_RESOLUTION_BITS
-  );
-
-  if (!pwmAttached_) {
-    Serial.println("ERROR: PWM output could not be configured");
+  // Initialize MCP4725 DAC using Adafruit library
+  if (!dac_.begin(AppConfig::MCP4725_ADDRESS)) {
+    Serial.println("ERROR: MCP4725 DAC could not be initialized");
     return;
   }
 
@@ -20,15 +15,15 @@ void MotorControl::begin() {
 
   applySpeed(0);
 
+  dacInitialized_ = true;
+
   Serial.printf(
-    "Motor PWM configured: pin=%u, frequency=%u Hz, resolution=%u bits\n",
-    AppConfig::MOTOR_PWM_PIN,
-    AppConfig::PWM_FREQUENCY_HZ,
-    AppConfig::PWM_RESOLUTION_BITS
+    "Motor DAC configured: Adafruit MCP4725 at address 0x%02X\n",
+    AppConfig::MCP4725_ADDRESS
   );
 }
 
-uint16_t MotorControl::speedToDuty(uint8_t percent) const {
+uint16_t MotorControl::speedToDAC(uint8_t percent) const {
   percent = constrain(
     percent,
     0,
@@ -40,11 +35,11 @@ uint16_t MotorControl::speedToDuty(uint8_t percent) const {
     0,
     AppConfig::MAX_SPEED_PERCENT,
     0,
-    AppConfig::PWM_MAX_DUTY
+    AppConfig::DAC_MAX_VALUE
   );
 
   if (AppConfig::OUTPUT_INVERTED) {
-    value = AppConfig::PWM_MAX_DUTY - value;
+    value = AppConfig::DAC_MAX_VALUE - value;
   }
 
   return value;
@@ -59,14 +54,12 @@ void MotorControl::applySpeed(uint8_t percent) {
 
   speedPercent_ = percent;
 
-  if (!pwmAttached_) {
+  if (!dacInitialized_) {
     return;
   }
 
-  ledcWrite(
-    AppConfig::MOTOR_PWM_PIN,
-    speedToDuty(speedPercent_)
-  );
+  uint16_t dacValue = speedToDAC(speedPercent_);
+  dac_.setVoltage(dacValue, false);  // false = no EEPROM write
 }
 
 void MotorControl::setSpeed(uint8_t percent) {
@@ -100,13 +93,13 @@ void MotorControl::emergencyStop() {
   lastRampUpdateMs_ = millis();
 
   Serial.printf(
-    "Motor emergency stop, PWM duty: %u\n",
-    duty()
+    "Motor emergency stop, DAC value: %u\n",
+    dacValue()
   );
 }
 
 void MotorControl::update() {
-  if (!pwmAttached_) {
+  if (!dacInitialized_) {
     return;
   }
 
@@ -163,9 +156,9 @@ void MotorControl::update() {
 
   if (speedPercent_ == targetSpeedPercent_) {
     Serial.printf(
-      "Motor reached target: %u%%, PWM duty: %u\n",
+      "Motor reached target: %u%%, DAC value: %u\n",
       speedPercent_,
-      duty()
+      dacValue()
     );
   }
 }
@@ -178,8 +171,8 @@ uint8_t MotorControl::targetSpeed() const {
   return targetSpeedPercent_;
 }
 
-uint16_t MotorControl::duty() const {
-  return speedToDuty(speedPercent_);
+uint16_t MotorControl::dacValue() const {
+  return speedToDAC(speedPercent_);
 }
 
 bool MotorControl::isRamping() const {
