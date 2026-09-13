@@ -2,17 +2,21 @@
 #include <Arduino.h>
 
 namespace AppConfig {
-  // ESP32-C3 SuperMini output pin.
-  constexpr uint8_t MOTOR_PWM_PIN = 1;
-  constexpr uint32_t PWM_FREQUENCY_HZ = 5000;
-  constexpr uint8_t PWM_RESOLUTION_BITS = 8;
-  constexpr uint16_t PWM_MAX_DUTY = 255;
+  // ========== DAC Output Configuration ==========
+  // Using MCP4725 I2C DAC for analog output (0-5V)
+  // Controlled via Adafruit_MCP4725 library
+  
+  // MCP4725 I2C address (depends on A0 pin: GND=0x60, VCC=0x61)
+  constexpr uint8_t MCP4725_ADDRESS = 0x60;
+  
+  // MCP4725 is 12-bit DAC with max value of 4095
+  constexpr uint16_t DAC_MAX_VALUE = 4095;
   constexpr uint8_t MAX_SPEED_PERCENT = 100;
 
   // Set true only when the external analogue output stage is inverted.
   constexpr bool OUTPUT_INVERTED = false;
 
-  // Provisioning access point.
+  // ========== Provisioning access point ==========
   constexpr char AP_SSID[] = "MotorController-Setup";
   constexpr char AP_PASSWORD[] = "motor1234"; // At least 8 characters.
 
@@ -23,7 +27,7 @@ namespace AppConfig {
   constexpr uint32_t WIFI_RECONNECT_INTERVAL_MS = 30000;
   constexpr uint32_t SPEED_UPDATE_DELAY_MS = 120;
 
-  constexpr char FIRMWARE_VERSION[] = "0.0.1";
+  constexpr char FIRMWARE_VERSION[] = "0.1.0";
   constexpr char BUILD_DATE[] = __DATE__;
   constexpr char BUILD_TIME[] = __TIME__;
 }
