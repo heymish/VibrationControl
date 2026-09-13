@@ -1,10 +1,10 @@
-# ESP32-C3 SuperMini Motor Controller
+# ESP32-C5 Mini Kit Motor Controller
 
-## Arduino IDE
+## Arduino IDE Setup
 
 1. Create or open a sketch named `MotorController`.
 2. Put every file in this folder into the same Arduino sketch directory.
-3. Select **ESP32C3 Dev Module**.
+3. Select **ESP32-C5-DEV** (or **ESP32-C5 Dev Module**).
 4. Set **USB CDC On Boot** to **Enabled**.
 5. Compile and upload.
 
@@ -26,11 +26,27 @@
 
 - `MotorController.ino`: application entry point.
 - `AppConfig.h`: settings, pins, AP credentials and timing.
-- `MotorControl.*`: PWM and speed state.
-- `NetworkManager.*`: Preferences, station mode, AP fallback and mDNS.
+- `MotorControl.*`: MCP4725 DAC control and speed ramping.
+- `MotorNetworkManager.*`: Preferences, station mode, AP fallback and mDNS.
 - `WebApp.*`: routes, request validation and JSON.
 - `WebPages.*`: embedded HTML, CSS and JavaScript.
 
-## Electrical note
+## Hardware
 
-The ESP32-C3 GPIO output is 0 to 3.3 V. The motor controller input was measured as 0 to 5 V. Use an appropriate filtered and buffered 0 to 5 V interface if full speed requires 5 V. Never connect 5 V or 24 V to an ESP32 GPIO.
+### MCP4725 DAC Connection (I2C)
+
+The motor speed is controlled via an I2C MCP4725 12-bit DAC that outputs 0-5V:
+
+- **SDA (Data)**: GPIO 8
+- **SCL (Clock)**: GPIO 9
+- **I2C Address**: 0x60 (default, A0 pin connected to GND)
+- **Vref**: 5V (external power supply)
+
+### Electrical Note
+
+The MCP4725 outputs 0-5V directly to your motor controller. The ESP32-C5 communicates with the DAC via I2C at 3.3V logic levels.
+
+## Libraries Required
+
+Install via Arduino IDE → Sketch → Include Library → Manage Libraries:
+- **Adafruit MCP4725** - I2C DAC control
