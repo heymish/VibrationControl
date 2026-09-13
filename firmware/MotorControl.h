@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <Adafruit_MCP4725.h>
 
 class MotorControl {
 public:
@@ -24,8 +25,8 @@ public:
   // Requested target speed.
   uint8_t targetSpeed() const;
 
-  // Current applied PWM duty.
-  uint16_t duty() const;
+  // Current applied DAC value (0-4095).
+  uint16_t dacValue() const;
 
   // True while the applied speed is moving toward the target.
   bool isRamping() const;
@@ -34,12 +35,14 @@ private:
   static constexpr uint32_t RAMP_INTERVAL_MS = 20;
   static constexpr uint8_t RAMP_STEP_PERCENT = 2;
 
+  Adafruit_MCP4725 dac_;
+
   uint8_t speedPercent_ = 0;
   uint8_t targetSpeedPercent_ = 0;
 
   uint32_t lastRampUpdateMs_ = 0;
-  bool pwmAttached_ = false;
+  bool dacInitialized_ = false;
 
-  uint16_t speedToDuty(uint8_t percent) const;
+  uint16_t speedToDAC(uint8_t percent) const;
   void applySpeed(uint8_t percent);
 };
