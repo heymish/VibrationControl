@@ -1,26 +1,50 @@
+#include <ESP_I2S.h>
+
+I2SClass I2S;
+
+#define I2S_BCLK 25
+#define I2S_WS   26
+#define I2S_DOUT 24
+
+#define AMP_SD   15
+
+const int SAMPLE_RATE = 16000;
+const int TONE_FREQ   = 1000;
+
+float phase = 0.0f;
+
 void setup()
 {
-    Serial.begin(115200);
-    delay(2000);
+  Serial.begin(115200);
+  delay(2000);
 
-    Serial.println("1");
+  Serial.println("Starting");
 
-    pinMode(15, OUTPUT);
-    digitalWrite(15, HIGH);
+  pinMode(AMP_SD, OUTPUT);
+  digitalWrite(AMP_SD, HIGH);
 
-    Serial.println("2");
+  Serial.println("SD Enabled");
 
-    Wire.begin(8, 9);
+  if (!I2S.begin(I2S_MODE_STD, SAMPLE_RATE, I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO))
+  {
+    Serial.println("I2S start failed!");
+    while (1);
+  }
 
-    Serial.println("3");
+  I2S.setPins(I2S_BCLK, I2S_WS, I2S_DOUT);
 
-    Serial.println("Starting I2S");
-
-    Serial.println("4");
+  Serial.println("I2S Started");
 }
 
 void loop()
 {
-    Serial.println("Running");
-    delay(1000);
+  int16_t sample =
+      (int16_t)(16000.0f * sinf(phase));
+
+  phase += 2.0f * PI * TONE_FREQ / SAMPLE_RATE;
+
+  if (phase > 2.0f * PI)
+    phase -= 2.0f * PI;
+
+  I2S.write(sample);
 }
