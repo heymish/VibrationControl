@@ -1,0 +1,118 @@
+#include <Wire.h>
+#include <Adafruit_MCP4725.h>
+#include <driver/i2s_std.h>
+
+Adafruit_MCP4725 dac;
+
+// MCP4725
+#define SDA_PIN 8
+#define SCL_PIN 9
+
+// MAX98357A
+#define I2S_BCLK 25
+#define I2S_WS   26
+#define I2S_DOUT 24
+#define AMP_SD   15
+
+#define SAMPLE_RATE 16000
+#define TONE_FREQ   100
+
+i2s_chan_handle_t tx_chan;
+
+void setupI2S()
+{
+  i2s_chan_config_t chan_cfg =
+      I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
+
+  i2s_new_channel(&chan_cfg, &tx_chan, NULL);
+
+  i2s_std_config_t std_cfg = {
+      .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(SAMPLE_RATE),
+      .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(
+          I2S_DATA_BIT_WIDTH_16BIT,
+          I2S_SLOT_MODE_MONO),
+      .gpio_cfg = {
+          .mclk = I2S_GPIO_UNUSED,
+          .bclk = (gpio_num_t)I2S_BCLK,
+          .ws = (gpio_num_t)I2S_WS,
+          .dout = (gpio_num_t)I2S_DOUT,
+          .din = I2S_GPIO_UNUSED,
+          .invert_flags = {
+              .mclk_inv = false,
+              .bclk_inv = false,
+              .ws_inv = false,
+          },
+      },
+  };
+
+  i2s_channel_init_std_mode(tx_chan, &std_cfg);
+  i2s_channel_enable(tx_chan);
+}
+
+void setup()
+{
+  Serial.begin(115200);
+
+  pinMode(AMP_SD, OUTPUT);
+  digitalWrite(AMP_SD, HIGH);
+
+  Wire.begin(SDA_PIN, SCL_PIN);
+
+  if (!dac.begin(0x60))
+  {
+    Serial.println("MCP4725 not found");
+    while (1);
+  }
+
+  setupI2S();
+
+  Serial.println("Test started");
+}
+
+float phase = 0.0f;
+
+void loop()
+{
+  // Generate audio block
+  int16_t samples[256];
+
+  for (int i = 0; i < 256; i++)
+  {
+    samples[i] = (int16_t)(
+        sinf(phase) * 12000.0f);
+
+    phase += 2.0f * PI * TONE_FREQ / SAMPLE_RATE;
+
+    if (phase > 2.0f * PI)
+      phase -= 2.0f * PI;
+  }
+
+  size_t bytes_written;
+  i2s_channel_write(
+      tx_chan,
+      samples,
+      sizeof(samples),
+      &bytes_written,
+      100);
+
+  // Sweep MCP4725 output
+  static uint16_t value = 0;
+  static int step = 16;
+
+  dac.setVoltage(value, false);
+
+  value += step;
+
+  if (value >= 4095)
+  {
+    value = 4095;
+    step = -16;
+  }
+
+  if (value == 0)
+  {
+    step = 16;
+  }
+
+  delay(2);
+}
